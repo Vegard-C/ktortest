@@ -4,6 +4,8 @@ buildscript {
   }
 }
 val kotlinVersion: String by project
+val kotorVersion: String by project
+val logbackVersion: String by project
 
 plugins {
   kotlin("jvm")
@@ -25,4 +27,25 @@ repositories {
 dependencies {
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
   implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+  implementation("io.ktor:ktor-server-core-jvm:$kotorVersion")
+  implementation("io.ktor:ktor-server-netty-jvm:$kotorVersion")
+  implementation("ch.qos.logback:logback-classic:$logbackVersion")
+}
+
+tasks.create("fatJar", Jar::class) {
+  group = "build"
+  description = "Creates a self-contained jar of the app"
+  manifest.attributes["Main-Class"] = "ktortest.StartUpKt"
+  archiveClassifier.set("fat")
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  val dependencies = configurations
+    .runtimeClasspath
+    .get()
+    .map(::zipTree)
+  from(dependencies)
+  with(tasks.jar.get())
+}
+
+tasks.named("build") {
+  dependsOn("fatJar")
 }
